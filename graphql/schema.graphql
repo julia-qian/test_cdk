@@ -10,19 +10,19 @@ input NoteInput {
   completed: Boolean!
 }
 
-# input UpdateNoteInput {
-#   id: ID!
-#   name: String
-#   completed: Boolean
-# }
+input UpdateNoteInput {
+  id: ID!
+  name: String
+  completed: Boolean
+}
 
-# type Query {
-#   getNoteById(noteId: String!): Note
-#   listNotes: [Note]
-# }
+type Query {
+  getNoteById(noteId: String!): Note
+  listNotes: [Note]
+}
 
 type Mutation {
   createNote(note: NoteInput!): Note
-#   updateNote(note: UpdateNoteInput!): Note
-#   deleteNote(noteId: String!): String
+  updateNote(note: UpdateNoteInput!): Note
+  deleteNote(noteId: String!): String
 }

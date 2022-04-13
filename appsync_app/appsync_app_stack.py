@@ -32,15 +32,15 @@ class AppsyncAppStack(Stack):
         cdk.CfnOutput(self, "GRAPHQLAPIKey", value=(api.api_key or ''))
         cdk.CfnOutput(self, "Stack Region", value=self.region)
         
-        # notes_lambda = aws_lambda.Function(self, 'AppSyncNotesHandler',
-        #     runtime=aws_lambda.Runtime.NODEJS_12_X,
-        #     handler='main.handler',
-        #     code=aws_lambda.Code.from_asset('lambda-fns'),
-        #     memory_size=1024
-        #     )
+        notes_lambda = aws_lambda.Function(self, 'AppSyncNotesHandler',
+            runtime=aws_lambda.Runtime.PYTHON_3_7,
+            handler='main.lambda_handler',
+            code=aws_lambda.Code.from_asset('lambda_fns'),
+            memory_size=1024
+            )
 
-        # # Set the new Lambda function as a data source for the AppSync API
-        # lambda_ds = api.add_lambda_data_source('lambdaDatasource', notes_lambda)
+        # Set the new Lambda function as a data source for the AppSync API
+        lambda_ds = api.add_lambda_data_source('lambdaDatasource', notes_lambda)
 
         # lambda_ds.create_resolver(
         #     type_name="Query",
@@ -52,10 +52,10 @@ class AppsyncAppStack(Stack):
         #     field_name="listNotes"
         # )
 
-        # lambda_ds.create_resolver(
-        #     type_name= "Mutation",
-        #     field_name= "createNote"
-        # )
+        lambda_ds.create_resolver(
+            type_name= "Mutation",
+            field_name= "createNote"
+        )
 
         # lambda_ds.create_resolver(
         #     type_name= "Mutation",
