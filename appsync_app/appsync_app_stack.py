@@ -1,43 +1,76 @@
 from aws_cdk import (
-    # Duration,
     Stack,
-    # aws_sqs as sqs,
 )
 from constructs import Construct
 import aws_cdk as cdk
 import aws_cdk.aws_dynamodb as ddb
 import aws_cdk.aws_lambda as aws_lambda
 import aws_cdk.aws_appsync_alpha as appsync
+from aws_lambda_powertools.logging import correlation_paths
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 
-test_dict = {
-    "lambda1": 
-        ["lambda1_handler","lambda_fns", "createNote", "Mutation"],
-    "lambda2":
-        ["lambda2_handler", "lambda_fns", "updateNote", "Mutation"],
-    "lambda3":
-        ["lambda3_handler", "lambda_fns", "listNotes", "Query"]
-}
+#================================================
+# Referenced links
+#================================================
+# Your first AWS CDK app:
+#       https://docs.aws.amazon.com/cdk/v2/guide/hello_world.html
 
+# Building Scalable GraphQL APIs on AWS with CDK, TypeScript, AWS AppSync, Amazon DynamoDB, and AWS Lambda:
+#       https://aws.amazon.com/blogs/mobile/building-scalable-graphql-apis-on-aws-with-cdk-and-aws-appsync/
+
+# Working with the AWS CDK in Python:
+#       https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-python.html
+
+# Migrating to AWS CDK v2:
+#       https://docs.aws.amazon.com/cdk/v2/guide/migrating-v2.html
+
+# Translating TypeScript AWS CDK code to other languages:
+#       https://docs.aws.amazon.com/cdk/v2/guide/multiple_languages.html
+
+# Build a GraphQL API on AWS with CDK, Python, AppSync, and DynamoDB(Part 1):
+#       https://aws.newbie.tips/rosius/build-a-graphql-api-on-aws-with-cdk-python-appsync-and-dynamodb-part-1-1pjl
+
+# Lambda Powertools Python GraphQL API
+#       https://awslabs.github.io/aws-lambda-powertools-python/latest/core/event_handler/appsync/#resolver-decorator
+
+app = AppSyncResolver()
+
+test_lambdas= [
+    {
+        "name": "test_appsync_resolver",
+        "asset" : "lambda_fns", #folder that contains lambda functions
+        "fields": [
+            ("Mutation", "createNote"), # (type_name, field_name)
+            ("Mutation", "updateNote"),
+            ("Query", "listNotes"),
+        ]
+    }
+]
 
 class SetUpGraphqlApi(appsync.GraphqlApi):
     def __init__(self, scope, id: str, name: str, schema: appsync.Schema, authorization_config: appsync.AuthorizationConfig, xray_enabled: bool):
         super().__init__(scope, id, name=name, schema=schema, authorization_config=authorization_config, xray_enabled=xray_enabled)
     
-    def create_lambdas(self, scope, dict:dict):
-        for name, args in dict.items():
-            new_lambda = aws_lambda.Function(scope, name + 'Handler',
+    def create_lambdas(self, scope, lambda_list:list):
+        for lambda_dict in lambda_list:
+            #create lambda
+            new_lambda = aws_lambda.Function(scope, lambda_dict["name"] + 'Handler',
                 runtime=aws_lambda.Runtime.PYTHON_3_7,
-                handler='main.' + args[0],
-                code=aws_lambda.Code.from_asset(args[1]),
+                handler='main.app',
+                code=aws_lambda.Code.from_asset(lambda_dict["asset"]),
                 memory_size=1024
                 )
         
-            lambda_ds = self.add_lambda_data_source(name + 'dataSource', new_lambda)
+            # create datasource 
+            lambda_ds = self.add_lambda_data_source(lambda_dict["name"] + 'dataSource', new_lambda)
 
-            lambda_ds.create_resolver(
-                type_name= args[3],
-                field_name= args[2]
-            )
+            # create resolvers
+            for field in lambda_dict["fields"]:
+                lambda_ds.create_resolver(
+                    type_name= field[0],
+                    field_name= field[1]
+                )
 
 
 class AppsyncAppStack(Stack):
@@ -63,40 +96,4 @@ class AppsyncAppStack(Stack):
         cdk.CfnOutput(self, "GRAPHQLAPIKey", value=(api.api_key or ''))
         cdk.CfnOutput(self, "Stack Region", value=self.region)
 
-        api.create_lambdas(self, test_dict)
-
-        # lambda1 = aws_lambda.Function(self, 'AppSyncNotesHandler',
-        #     runtime=aws_lambda.Runtime.PYTHON_3_7,
-        #     handler='main.lambda1_handler',
-        #     code=aws_lambda.Code.from_asset('lambda_fns'),
-        #     memory_size=1024
-        #     )
-
-        # # Set the new Lambda function as a data source for the AppSync API
-        # lambda_ds = api.add_lambda_data_source('lambdaDatasource', lambda1)
-
-        # # lambda_ds.create_resolver(
-        # #     type_name="Query",
-        # #     field_name="getNoteById"
-        # #     )
-
-        # # lambda_ds.create_resolver(
-        # #     type_name="Query",
-        # #     field_name="listNotes"
-        # # )
-
-        # lambda_ds.create_resolver(
-        #     type_name= "Mutation",
-        #     field_name= "createNote"
-        # )
-
-        # lambda_ds.create_resolver(
-        #     type_name= "Mutation",
-        #     field_name= "deleteNote"
-        # )
-
-        # lambda_ds.create_resolver(
-        #     type_name="Mutation",
-        #     field_name= "updateNote"
-        #     )
-
+        api.create_lambdas(self, test_lambdas)

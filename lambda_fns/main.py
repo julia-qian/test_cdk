@@ -1,18 +1,17 @@
-def lambda1_handler(event, context=None):
-    if event["info"]["fieldName"] == "createNote":
-        return {"id": "111", "note": "Lambda1 createNote!"}
-    else:
-        return {"id": "112", "note": "Lambda1 Error!"} 
+from aws_lambda_powertools.logging import correlation_paths
+from aws_lambda_powertools.event_handler import AppSyncResolver
+from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 
-def lambda2_handler(event, context=None):
-    if event["info"]["fieldName"] == "updateNote":
-        return {"id": "222", "note": "Lambda2 updateNote!"}
-    else:
-        return {"id": "223", "note": "Lambda2 Error!"} 
+app = AppSyncResolver() #lambda handler
 
-def lambda3_handler(event, context=None):
-    print(event)
-    if event["info"]["fieldName"] == "listNotes":
-        return [{"id": "333", "note": "Lambda3 listNotes!"}]
-    else:
-        return [{"id": "334", "note": "Lambda2 Error!"}]
+@app.resolver(type_name="Mutation", field_name="createNote") #registers function
+def create_note(note): #generic python functions
+    return {"id": "111", "name": "Alice", "note": "Lambda1 createNote!"}
+
+@app.resolver(type_name="Mutation", field_name="updateNote")
+def update_note(id: str):
+    return {"id": "222", "note": "Lambda2 updateNote!"}
+
+@app.resolver(type_name="Query", field_name="listNotes")
+def list_notes():
+    return [{"id": "333", "note": "Lambda3 listNotes!"}]
