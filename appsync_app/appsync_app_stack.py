@@ -3,12 +3,9 @@ from aws_cdk import (
 )
 from constructs import Construct
 import aws_cdk as cdk
-import aws_cdk.aws_dynamodb as ddb
 import aws_cdk.aws_lambda as aws_lambda
 import aws_cdk.aws_appsync_alpha as appsync
-from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.event_handler import AppSyncResolver
-from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 
 #================================================
 # Referenced links
@@ -39,9 +36,9 @@ app = AppSyncResolver()
 test_lambdas= [
     {
         "name": "test_appsync_resolver",
-        "asset" : "lambda_fns", #folder that contains lambda functions
+        "asset" : "lambda_fns",             # folder that contains lambda functions
         "fields": [
-            ("Mutation", "createNote"), # (type_name, field_name)
+            ("Mutation", "createNote"),     # (type_name, field_name)
             ("Mutation", "updateNote"),
             ("Query", "listNotes"),
         ]

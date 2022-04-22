@@ -1,11 +1,9 @@
-from aws_lambda_powertools.logging import correlation_paths
 from aws_lambda_powertools.event_handler import AppSyncResolver
-from aws_lambda_powertools.utilities.data_classes.appsync import scalar_types_utils
 
 app = AppSyncResolver() #lambda handler
 
-@app.resolver(type_name="Mutation", field_name="createNote") #registers function
-def create_note(note): #generic python functions
+@app.resolver(type_name="Mutation", field_name="createNote")    # registers function
+def create_note(note):                                          # generic python functions
     return {"id": "111", "name": "Alice", "note": "Lambda1 createNote!"}
 
 @app.resolver(type_name="Mutation", field_name="updateNote")
